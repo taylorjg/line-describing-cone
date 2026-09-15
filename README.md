@@ -1,6 +1,6 @@
 # Line Describing Cone — Study
 
-A browser study of Anthony McCall’s *Line Describing a Cone 2.0* (2010). A minimal starting point: projector, dark screen wall, and a slowly drawing white circle — built up from here.
+A browser study of Anthony McCall’s *Line Describing a Cone 2.0* (2010). A minimal starting point: projector, dark screen wall, a slowly drawing white circle, and a hollow volumetric cone membrane — built up from here.
 
 ## About the artwork
 
@@ -37,7 +37,7 @@ npm run deploy
 React UI ↔ `useGraphicsEngine` hook ↔ `ConeEngine` (pure Three.js), following the pattern used in [kaleidoscope-web](../../curated-repos/kaleidoscope-web/).
 
 ```
-src/graphics/     ConeEngine, wall arc, scene layout
+src/graphics/     ConeEngine, wall arc, cone membrane beam, scene layout
 src/hooks/        useGraphicsEngine, useConeSettings
 src/components/   GraphicsCanvas, ControlPanel
 ```

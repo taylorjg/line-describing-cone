@@ -10,6 +10,7 @@ import {
   layoutScene,
 } from "./scene-layout";
 import { WallArc } from "./wall-arc";
+import { ConeBeam } from "./cone-beam";
 
 export interface ConeEngineOptions {
   onStatus?: (status: EngineStatus) => void;
@@ -25,6 +26,7 @@ export class ConeEngine {
   private readonly _controls: OrbitControls;
   private readonly _layout = createSceneLayout();
   private readonly _wallArc = new WallArc();
+  private readonly _coneBeam = new ConeBeam();
   private readonly _wallTarget = new THREE.Vector3();
   private readonly _resizeObserver: ResizeObserver;
 
@@ -69,6 +71,7 @@ export class ConeEngine {
     this._scene.add(this._layout.projector);
     this._scene.add(this._layout.wall);
     this._scene.add(this._layout.floor);
+    this._layout.emitPoint.add(this._coneBeam.mesh);
     this._scene.add(this._wallArc.mesh);
 
     const ambient = new THREE.AmbientLight(0x334455, 0.25);
@@ -113,6 +116,7 @@ export class ConeEngine {
     this._resizeObserver.disconnect();
     this._controls.dispose();
     this._wallArc.dispose();
+    this._coneBeam.dispose();
     this._layout.wall.geometry.dispose();
     (this._layout.wall.material as THREE.Material).dispose();
     this._layout.floor.geometry.dispose();
@@ -161,14 +165,14 @@ export class ConeEngine {
     this._settings = toEngineSettings(this._settings, this._elapsedSec);
   }
 
-  /** Default view: close on the screen with the projector at the bottom edge. */
+  /** Default view: slightly off-axis so the cone edge reads on load. */
   private _frameCameraOnWall(settings: ConeSettings): void {
     const wall = getWallLayout(toEngineSettings(settings));
     this._controls.target.copy(wall.center);
     this._camera.position.set(
-      wall.center.x,
-      wall.center.y + 0.05,
-      wall.center.z + 4.2
+      wall.center.x + 1.8,
+      wall.center.y + 0.15,
+      wall.center.z + 3.8
     );
   }
 
@@ -177,7 +181,11 @@ export class ConeEngine {
     const wall = getWallLayout(this._settings);
 
     this._wallTarget.copy(wall.center);
-    aimProjectorAtWall(this._layout.gimbal, this._wallTarget);
+    aimProjectorAtWall(
+      this._layout.gimbal,
+      this._layout.emitPoint,
+      this._wallTarget
+    );
 
     this._wallArc.resize(wall.width, wall.height);
     this._wallArc.mesh.position.copy(wall.center);
@@ -185,6 +193,7 @@ export class ConeEngine {
     this._wallArc.mesh.rotation.copy(this._layout.wall.rotation);
 
     this._wallArc.update(this._settings);
+    this._coneBeam.update(this._settings, wall, this._layout.emitPoint);
 
     this._renderer.render(this._scene, this._camera);
   }

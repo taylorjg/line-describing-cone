@@ -11,6 +11,12 @@ export interface SceneLayoutObjects {
 
 const PROJECTOR_HEIGHT = 1.2;
 const LENS_OFFSET = new THREE.Vector3(0, PROJECTOR_HEIGHT + 0.08, -0.05);
+const LENS_DEPTH = 0.45;
+const LENS_HEIGHT = 0.18;
+/** Beam exits the front face of the lens box (+Z in gimbal space). */
+const EMIT_Z_OFFSET = LENS_DEPTH * 0.5;
+/** Narrow end radius — half the lens box height. */
+const APEX_RADIUS = LENS_HEIGHT * 0.5;
 /** Dark screen — MeshBasic so it reads clearly against the black room. */
 const WALL_COLOR = 0x2a3140;
 const WALL_SIZE_FACTOR = 2.2;
@@ -57,6 +63,7 @@ export const createSceneLayout = (): SceneLayoutObjects => {
   gimbal.add(lens);
 
   const emitPoint = new THREE.Object3D();
+  emitPoint.position.set(0, 0, EMIT_Z_OFFSET);
   gimbal.add(emitPoint);
 
   const wall = new THREE.Mesh(
@@ -90,16 +97,17 @@ export const layoutScene = (
   objects.floor.scale.set(throwDistance * 2.5, throwDistance * 2.5, 1);
 };
 
-/** Tilt the head at the lens so +Z aims at the wall without swinging the plinth. */
+/** Tilt the head so the emit point (+Z) aims at the wall without swinging the plinth. */
 export const aimProjectorAtWall = (
   gimbal: THREE.Object3D,
+  emitPoint: THREE.Object3D,
   wallPosition: THREE.Vector3
 ): void => {
   gimbal.rotation.set(0, 0, 0);
   gimbal.updateWorldMatrix(true, false);
-  gimbal.getWorldPosition(_from);
+  emitPoint.getWorldPosition(_from);
   const direction = wallPosition.clone().sub(_from).normalize();
   gimbal.quaternion.setFromUnitVectors(_forward, direction);
 };
 
-export { PROJECTOR_HEIGHT, LENS_OFFSET };
+export { PROJECTOR_HEIGHT, LENS_OFFSET, APEX_RADIUS, EMIT_Z_OFFSET };

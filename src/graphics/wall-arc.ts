@@ -1,14 +1,15 @@
 import * as THREE from "three";
 import type { EngineSettings } from "@app/settings/types";
 import { getArcProgress } from "./arc-animation";
+import {
+  getCanvasArcParams,
+  getArcSweep,
+  ARC_START_ANGLE,
+} from "./arc-geometry";
 
 const TEXTURE_SIZE = 1024;
 const LINE_WIDTH = 8;
 const HEAD_RADIUS = 9;
-/** Fraction of texture used as arc radius — keep margin for round caps. */
-const ARC_RADIUS_FACTOR = 0.44;
-/** Vertical centre in texture space (0–1). */
-const ARC_CENTER_Y = 0.5;
 
 export class WallArc {
   readonly mesh: THREE.Mesh;
@@ -46,9 +47,7 @@ export class WallArc {
     const progress = getArcProgress(settings);
     const ctx = this.ctx;
     const size = TEXTURE_SIZE;
-    const cx = size * 0.5;
-    const cy = size * ARC_CENTER_Y;
-    const radius = size * ARC_RADIUS_FACTOR;
+    const { cx, cy, radius } = getCanvasArcParams(size);
 
     ctx.clearRect(0, 0, size, size);
 
@@ -57,9 +56,8 @@ export class WallArc {
       return;
     }
 
-    const startAngle = Math.PI * 0.5;
-    const sweep = progress * Math.PI * 2;
-    const endAngle = startAngle + sweep;
+    const sweep = getArcSweep(progress);
+    const endAngle = ARC_START_ANGLE + sweep;
 
     ctx.strokeStyle = "#ffffff";
     ctx.lineWidth = LINE_WIDTH;
@@ -67,7 +65,7 @@ export class WallArc {
     ctx.lineJoin = "round";
 
     ctx.beginPath();
-    ctx.arc(cx, cy, radius, startAngle, endAngle);
+    ctx.arc(cx, cy, radius, ARC_START_ANGLE, endAngle);
     ctx.stroke();
 
     const hx = cx + Math.cos(endAngle) * radius;
