@@ -1,0 +1,50 @@
+{
+  "title": "Line Describing a Cone — visual references",
+  "artist": "Anthony McCall",
+  "note": "Reference images for calibrating the browser study. Not included in the production bundle.",
+  "images": [
+    {
+      "file": "whitney-frame-minute24.jpg",
+      "caption": "Wall arc at ~minute 24 — thin white stroke on black, drawing head visible",
+      "source": "https://whitneymedia.org/assets/image/822750/large_ldac-frame24min-288_1140.jpg",
+      "credit": "Whitney Museum of American Art"
+    },
+    {
+      "file": "rochechouart-install-crop.jpg",
+      "caption": "1973 installation — hollow cone, sharp shell edges, swirling haze, figure silhouette",
+      "source": "https://whitneymedia.org/assets/image/822752/large_rochechouart-ldac-installation04a_crop_diep-retouch_1140.jpg",
+      "credit": "Freddy Le Saux / Musée de Rochechouart"
+    },
+    {
+      "file": "rochechouart-install-wide.jpg",
+      "caption": "1973 installation wide — projector on plinth, cone across dark room",
+      "source": "https://whitneymedia.org/assets/image/818079/large_ldac-rochechouart-installphoto01diep.jpg",
+      "credit": "Freddy Le Saux / Musée de Rochechouart"
+    },
+    {
+      "file": "frac-2.0-install.jpg",
+      "caption": "Line Describing a Cone 2.0 (~minute 24) — crisp digital arc, straight cone edges, soft volumetric fill",
+      "source": "https://www.fracbretagne.fr/wp-content/uploads/2025/04/Anthone-McCall-1.jpg",
+      "credit": "Courtesy Galerie Martine Aboucaya / Frac Bretagne"
+    }
+  ],
+  "videos": [
+    {
+      "title": "TateShots — McCall narrating (2008)",
+      "url": "https://www.youtube.com/watch?v=1-HWsxPnNNY",
+      "notes": "Pencil beam → arc → cone progression"
+    },
+    {
+      "title": "Whitney Dreamlands — Line Describing a Cone, 1973",
+      "url": "https://www.youtube.com/watch?v=D2XMlLuPJYc",
+      "notes": "Documentation of the solid-light installation"
+    }
+  ],
+  "textReferences": [
+    "https://whitney.org/collection/works/15286",
+    "https://whitney.org/exhibitions/dreamlands/art?section=45",
+    "https://teachingandlearningcinema.org/2015/06/21/line-describing-a-cone-projection-specifications/",
+    "https://en.wikipedia.org/wiki/Line_Describing_a_Cone",
+    "https://martineaboucaya.com/artists/32-anthony-mccall/works/9648-anthony-mccall-line-describing-a-cone-2.0-2010/"
+  ]
+}
