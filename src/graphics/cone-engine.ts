@@ -35,7 +35,7 @@ export class ConeEngine {
   private _settings = toEngineSettings(DEFAULT_SETTINGS);
   private _disposed = false;
   private _rafId: number | null = null;
-  private _clock = new THREE.Clock();
+  private _timer = new THREE.Timer();
   private _elapsedSec = 0;
   private _cycleCompleteSent = false;
 
@@ -83,6 +83,8 @@ export class ConeEngine {
     this._resizeObserver = new ResizeObserver(() => this._handleResize());
     this._resizeObserver.observe(container);
 
+    this._timer.connect(document);
+
     this._onStatus({ type: "ready" });
     this._loop = this._loop.bind(this);
     this._rafId = requestAnimationFrame(this._loop);
@@ -115,6 +117,7 @@ export class ConeEngine {
     if (this._disposed) return;
     this._disposed = true;
     if (this._rafId != null) cancelAnimationFrame(this._rafId);
+    this._timer.dispose();
     this._resizeObserver.disconnect();
     this._controls.dispose();
     this._wallArc.dispose();
@@ -144,9 +147,10 @@ export class ConeEngine {
     this._renderer.setSize(clientWidth, clientHeight, false);
   }
 
-  private _loop(): void {
+  private _loop(timestamp: number): void {
     if (this._disposed) return;
-    const delta = this._clock.getDelta();
+    this._timer.update(timestamp);
+    const delta = this._timer.getDelta();
     this._tickTime(delta);
     this._renderFrame();
     this._controls.update();
