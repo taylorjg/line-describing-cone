@@ -9,6 +9,7 @@ import {
   getWallLayout,
   layoutScene,
   PLINTH_HEIGHT,
+  PROJECTOR_HEIGHT,
 } from "./scene-layout";
 import { WallArc } from "./wall-arc";
 import { ConeBeam } from "./cone-beam";
@@ -166,22 +167,27 @@ export class ConeEngine {
     this._settings = toEngineSettings(this._settings, this._elapsedSec);
   }
 
-  /** Default view: behind the projector, looking toward the wall. */
+  /** Default view: three-quarter angle — projector lower-left, wall mid-right. */
   private _frameCameraOnWall(settings: ConeSettings): void {
-    const engine = toEngineSettings(settings);
-    const wall = getWallLayout(engine);
-    const { throwDistance } = engine;
+    const { throwDistance } = toEngineSettings(settings);
 
-    this._controls.target.set(
+    const beamY = PLINTH_HEIGHT + 0.08 + PROJECTOR_HEIGHT * 0.5;
+    // Aim between plinth base and mid-beam so a tight zoom still catches the plinth.
+    const target = new THREE.Vector3(
       0,
-      (PLINTH_HEIGHT + wall.center.y) * 0.38,
-      -throwDistance * 0.42
+      PLINTH_HEIGHT * 0.42 + beamY * 0.38,
+      -throwDistance * 0.3
     );
-    this._camera.position.set(
-      throwDistance * 0.36,
-      PLINTH_HEIGHT + wall.center.y * 0.28,
-      throwDistance * 0.32
+    const offset = new THREE.Vector3(
+      throwDistance * 0.5,
+      throwDistance * 0.15 + beamY * 0.12,
+      throwDistance * 0.72
     );
+    offset.multiplyScalar(0.7);
+
+    this._controls.target.copy(target);
+    this._camera.position.copy(target).add(offset);
+    this._controls.update();
   }
 
   private _renderFrame(): void {

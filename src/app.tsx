@@ -24,7 +24,7 @@ const downloadDataUrl = (dataUrl: string, filename: string) => {
 export function App() {
   const { settings, setImmediate, togglePlaying } = useConeSettings();
   const [status, setStatus] = useState<EngineStatus>({ type: "idle" });
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const canvasRef = useRef<GraphicsCanvasHandle>(null);
 

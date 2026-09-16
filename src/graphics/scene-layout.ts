@@ -24,7 +24,7 @@ const PROJECTOR_OFFSET = new THREE.Vector3(0, PLINTH_HEIGHT + 0.08, -0.05);
 /** Beam exits the front face of the projector (+Z in gimbal space). */
 const EMIT_Z_OFFSET = PROJECTOR_DEPTH * 0.5;
 /** Narrow end aperture radius on the projector front face. */
-const APEX_RADIUS = PROJECTOR_HEIGHT * 0.26;
+const APEX_RADIUS = PROJECTOR_HEIGHT * 0.25;
 /** Dark screen — MeshBasic so it reads clearly against the black room. */
 const WALL_COLOR = 0x2a3140;
 const WALL_SIZE_FACTOR = 2.2;
