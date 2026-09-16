@@ -65,7 +65,7 @@ const fragmentShader = /* glsl */ `
     vec3 toFrag = vWorldPos - projectorPosition;
     float dist = length(toFrag);
 
-    // vUv.y runs narrow (lens) → wide (wall); hot at source, fade along the beam.
+    // vUv.y runs narrow (projector) → wide (wall); hot at source, fade along the beam.
     float t = clamp(vUv.y, 0.0, 1.0);
     float distAtten = mix(farAtten, nearBoost, pow(1.0 - t, falloffPower));
 

@@ -8,6 +8,7 @@ import {
   createSceneLayout,
   getWallLayout,
   layoutScene,
+  PLINTH_HEIGHT,
 } from "./scene-layout";
 import { WallArc } from "./wall-arc";
 import { ConeBeam } from "./cone-beam";
@@ -74,7 +75,7 @@ export class ConeEngine {
     this._layout.emitPoint.add(this._coneBeam.mesh);
     this._scene.add(this._wallArc.mesh);
 
-    const ambient = new THREE.AmbientLight(0x334455, 0.25);
+    const ambient = new THREE.AmbientLight(0x445566, 0.38);
     this._scene.add(ambient);
 
     this._handleResize();
@@ -165,14 +166,21 @@ export class ConeEngine {
     this._settings = toEngineSettings(this._settings, this._elapsedSec);
   }
 
-  /** Default view: slightly off-axis so the cone edge reads on load. */
+  /** Default view: behind the projector, looking toward the wall. */
   private _frameCameraOnWall(settings: ConeSettings): void {
-    const wall = getWallLayout(toEngineSettings(settings));
-    this._controls.target.copy(wall.center);
+    const engine = toEngineSettings(settings);
+    const wall = getWallLayout(engine);
+    const { throwDistance } = engine;
+
+    this._controls.target.set(
+      0,
+      (PLINTH_HEIGHT + wall.center.y) * 0.38,
+      -throwDistance * 0.42
+    );
     this._camera.position.set(
-      wall.center.x + 1.8,
-      wall.center.y + 0.15,
-      wall.center.z + 3.8
+      throwDistance * 0.36,
+      PLINTH_HEIGHT + wall.center.y * 0.28,
+      throwDistance * 0.32
     );
   }
 

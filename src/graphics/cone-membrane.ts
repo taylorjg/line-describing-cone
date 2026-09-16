@@ -71,7 +71,7 @@ export class ConeMembraneGeometry extends THREE.BufferGeometry {
     this.setDrawRange(0, this._indexCount(numPoints));
   }
 
-  /** Narrow ring at the lens (v = 0) and arc on the wall (v = 1), emit-local space. */
+  /** Narrow ring at the projector (v = 0) and arc on the wall (v = 1), emit-local space. */
   update(narrowPoints: THREE.Vector3[], widePoints: THREE.Vector3[]): void {
     const numPoints = narrowPoints.length;
     if (numPoints < 2 || widePoints.length !== numPoints) {

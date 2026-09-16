@@ -9,14 +9,22 @@ export interface SceneLayoutObjects {
   floor: THREE.Mesh;
 }
 
-const PROJECTOR_HEIGHT = 1.2;
-const LENS_OFFSET = new THREE.Vector3(0, PROJECTOR_HEIGHT + 0.08, -0.05);
-const LENS_DEPTH = 0.45;
-const LENS_HEIGHT = 0.18;
-/** Beam exits the front face of the lens box (+Z in gimbal space). */
-const EMIT_Z_OFFSET = LENS_DEPTH * 0.5;
-/** Narrow end radius — half the lens box height. */
-const APEX_RADIUS = LENS_HEIGHT * 0.5;
+const PLINTH_HEIGHT = 1.2;
+const PLINTH_WIDTH = 0.5;
+const PLINTH_DEPTH = 0.5;
+/** Slightly lighter than the wall so the body reads against the floor. */
+const PLINTH_COLOR = 0x353b48;
+
+/** Projector head — the box mounted on the plinth (not the plinth itself). */
+const PROJECTOR_WIDTH = 0.35;
+const PROJECTOR_HEIGHT = 0.18;
+const PROJECTOR_DEPTH = 0.45;
+const PROJECTOR_OFFSET = new THREE.Vector3(0, PLINTH_HEIGHT + 0.08, -0.05);
+
+/** Beam exits the front face of the projector (+Z in gimbal space). */
+const EMIT_Z_OFFSET = PROJECTOR_DEPTH * 0.5;
+/** Narrow end aperture radius on the projector front face. */
+const APEX_RADIUS = PROJECTOR_HEIGHT * 0.26;
 /** Dark screen — MeshBasic so it reads clearly against the black room. */
 const WALL_COLOR = 0x2a3140;
 const WALL_SIZE_FACTOR = 2.2;
@@ -41,18 +49,23 @@ export const createSceneLayout = (): SceneLayoutObjects => {
   const projector = new THREE.Group();
 
   const plinth = new THREE.Mesh(
-    new THREE.BoxGeometry(0.5, PROJECTOR_HEIGHT, 0.5),
-    new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 })
+    new THREE.BoxGeometry(PLINTH_WIDTH, PLINTH_HEIGHT, PLINTH_DEPTH),
+    new THREE.MeshStandardMaterial({
+      color: PLINTH_COLOR,
+      roughness: 0.85,
+      emissive: 0x151920,
+      emissiveIntensity: 0.12,
+    })
   );
-  plinth.position.y = PROJECTOR_HEIGHT * 0.5;
+  plinth.position.y = PLINTH_HEIGHT * 0.5;
   projector.add(plinth);
 
   const gimbal = new THREE.Group();
-  gimbal.position.copy(LENS_OFFSET);
+  gimbal.position.copy(PROJECTOR_OFFSET);
   projector.add(gimbal);
 
-  const lens = new THREE.Mesh(
-    new THREE.BoxGeometry(0.35, 0.18, 0.45),
+  const projectorHead = new THREE.Mesh(
+    new THREE.BoxGeometry(PROJECTOR_WIDTH, PROJECTOR_HEIGHT, PROJECTOR_DEPTH),
     new THREE.MeshStandardMaterial({
       color: 0x222222,
       emissive: 0x223344,
@@ -60,11 +73,11 @@ export const createSceneLayout = (): SceneLayoutObjects => {
       roughness: 0.4,
     })
   );
-  gimbal.add(lens);
+  gimbal.add(projectorHead);
 
   const emitPoint = new THREE.Object3D();
   emitPoint.position.set(0, 0, EMIT_Z_OFFSET);
-  gimbal.add(emitPoint);
+  projectorHead.add(emitPoint);
 
   const wall = new THREE.Mesh(
     new THREE.PlaneGeometry(1, 1),
@@ -97,7 +110,7 @@ export const layoutScene = (
   objects.floor.scale.set(throwDistance * 2.5, throwDistance * 2.5, 1);
 };
 
-/** Tilt the head so the emit point (+Z) aims at the wall without swinging the plinth. */
+/** Tilt the projector head so the emit point (+Z) aims at the wall without swinging the plinth. */
 export const aimProjectorAtWall = (
   gimbal: THREE.Object3D,
   emitPoint: THREE.Object3D,
@@ -110,4 +123,15 @@ export const aimProjectorAtWall = (
   gimbal.quaternion.setFromUnitVectors(_forward, direction);
 };
 
-export { PROJECTOR_HEIGHT, LENS_OFFSET, APEX_RADIUS, EMIT_Z_OFFSET };
+export {
+  PLINTH_HEIGHT,
+  PLINTH_WIDTH,
+  PLINTH_DEPTH,
+  PLINTH_COLOR,
+  PROJECTOR_WIDTH,
+  PROJECTOR_HEIGHT,
+  PROJECTOR_DEPTH,
+  PROJECTOR_OFFSET,
+  APEX_RADIUS,
+  EMIT_Z_OFFSET,
+};

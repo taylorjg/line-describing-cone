@@ -52,15 +52,19 @@ export const sampleWallArcPoints = (
 export const getArcAngle = (progress: number, t: number): number =>
   ARC_START_ANGLE + getArcSweep(progress) * t;
 
-/** Point on the ruling at apexRadius from the emit origin, collinear with wallPoint. */
+/** Point on the front-face aperture circle (z = 0), aligned with each wall ruling. */
 export const getNarrowPointOnRuling = (
   wallPointLocal: THREE.Vector3,
   apexRadius: number,
   target = new THREE.Vector3()
 ): THREE.Vector3 => {
-  const dist = wallPointLocal.length();
-  if (dist < 1e-6) return target.set(0, 0, 0);
-  return target.copy(wallPointLocal).multiplyScalar(apexRadius / dist);
+  const len = Math.hypot(wallPointLocal.x, wallPointLocal.y);
+  if (len < 1e-6) return target.set(0, 0, 0);
+  return target.set(
+    (wallPointLocal.x / len) * apexRadius,
+    (wallPointLocal.y / len) * apexRadius,
+    0
+  );
 };
 
 export const getCanvasArcParams = (size: number) => ({
