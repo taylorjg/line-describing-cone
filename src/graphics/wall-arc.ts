@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import type { EngineSettings } from "@app/settings/types";
-import { getArcProgress } from "./arc-animation";
+import { getSequenceStateFromSettings } from "./arc-animation";
 import { drawWallArc } from "./wall-arc-draw";
 
 const TEXTURE_SIZE = 1024;
@@ -40,12 +40,21 @@ export class WallArc {
   }
 
   update(settings: EngineSettings): void {
-    const progress = getArcProgress(settings);
-    drawWallArc(this.ctx, TEXTURE_SIZE, progress, {
-      lineWidth: LINE_WIDTH,
-      headRadius: HEAD_RADIUS,
+    const sequence = getSequenceStateFromSettings(settings);
+    drawWallArc(this.ctx, TEXTURE_SIZE, {
+      arcProgress: sequence.arcProgress,
+      lightOpacity: sequence.lightOpacity,
+      headOpacity: sequence.headOpacity,
+      arcOpacity: sequence.arcOpacity,
+      style: {
+        lineWidth: LINE_WIDTH,
+        headRadius: HEAD_RADIUS,
+      },
     });
     this.texture.needsUpdate = true;
+    this.mesh.visible =
+      sequence.lightOpacity > 0 &&
+      (sequence.headOpacity > 0 || sequence.arcOpacity > 0);
   }
 
   dispose(): void {

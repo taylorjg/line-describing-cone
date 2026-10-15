@@ -14,6 +14,8 @@ import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import PauseIcon from "@mui/icons-material/Pause";
 import ReplayIcon from "@mui/icons-material/Replay";
 import type { ConeSettings, EngineStatus } from "@app/settings/types";
+import type { SequenceState } from "@app/sequence/sequence-types";
+import { SEQUENCE_TOTAL_SEC } from "@app/sequence/ldac-sequence";
 
 const panelSurfaceSx = {
   bgcolor: "rgba(0,0,0,0.72)",
@@ -23,6 +25,7 @@ const panelSurfaceSx = {
 
 interface ControlPanelProps {
   settings: ConeSettings;
+  sequence: SequenceState;
   togglePlaying: () => void;
   status: EngineStatus;
   onSnapshot: () => void;
@@ -33,8 +36,16 @@ interface ControlPanelProps {
   onToggleFullscreen: () => void;
 }
 
+const formatSequenceTime = (seconds: number): string => {
+  const whole = Math.floor(seconds);
+  const mins = Math.floor(whole / 60);
+  const secs = whole % 60;
+  return `${mins}:${secs.toString().padStart(2, "0")}`;
+};
+
 export function ControlPanel({
   settings,
+  sequence,
   togglePlaying,
   status,
   onSnapshot,
@@ -85,6 +96,13 @@ export function ControlPanel({
         </Button>
       </Stack>
 
+      <Typography variant="caption" color="text.secondary">
+        Stage: {sequence.stageLabel}
+      </Typography>
+      <Typography variant="caption" color="text.secondary">
+        Time: {formatSequenceTime(sequence.sequenceTimeSec)} /{" "}
+        {formatSequenceTime(SEQUENCE_TOTAL_SEC)}
+      </Typography>
       <Typography variant="caption" color="text.secondary">
         Status: {status.type}
       </Typography>

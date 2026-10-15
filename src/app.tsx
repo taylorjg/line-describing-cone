@@ -5,8 +5,11 @@ import {
   type GraphicsCanvasHandle,
 } from "@app/components/graphics-canvas";
 import { ControlPanel } from "@app/components/control-panel";
+import { TitleOverlay } from "@app/components/title-overlay";
 import { useConeSettings } from "@app/hooks/use-cone-settings";
 import type { EngineStatus } from "@app/settings/types";
+import type { SequenceState } from "@app/sequence/sequence-types";
+import { getSequenceState } from "@app/sequence/get-sequence-state";
 
 const theme = createTheme({
   palette: {
@@ -24,6 +27,9 @@ const downloadDataUrl = (dataUrl: string, filename: string) => {
 export function App() {
   const { settings, setImmediate, togglePlaying } = useConeSettings();
   const [status, setStatus] = useState<EngineStatus>({ type: "idle" });
+  const [sequence, setSequence] = useState<SequenceState>(() =>
+    getSequenceState(0)
+  );
   const [collapsed, setCollapsed] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const canvasRef = useRef<GraphicsCanvasHandle>(null);
@@ -39,6 +45,10 @@ export function App() {
 
   const handleStatus = useCallback((next: EngineStatus) => {
     setStatus(next);
+  }, []);
+
+  const handleSequenceState = useCallback((next: SequenceState) => {
+    setSequence(next);
   }, []);
 
   const handleSnapshot = useCallback(() => {
@@ -69,10 +79,13 @@ export function App() {
         ref={canvasRef}
         settings={settings}
         onStatus={handleStatus}
+        onSequenceState={handleSequenceState}
       />
+      <TitleOverlay opacity={sequence.titleOpacity} />
       {settings.showControls && (
         <ControlPanel
           settings={settings}
+          sequence={sequence}
           togglePlaying={togglePlaying}
           status={status}
           onSnapshot={handleSnapshot}

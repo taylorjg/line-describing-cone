@@ -1,15 +1,17 @@
 import type { EngineSettings } from "@app/settings/types";
+import {
+  getSequenceState,
+  getSequenceTimeFromPlayback,
+} from "@app/sequence/get-sequence-state";
+import type { SequenceState } from "@app/sequence/sequence-types";
 
-/** Effective arc progress 0–1 from playback time or manual scrub. */
-export const getArcProgress = (settings: EngineSettings): number => {
-  const { playing, durationSec, timeScale, progress, elapsedSec } = settings;
-
-  let value = playing
-    ? (elapsedSec * timeScale) / Math.max(durationSec, 0.001)
-    : progress;
-
-  value = value % 1;
-  if (value < 0) value += 1;
-
-  return Math.min(Math.max(value, 0), 1);
+export const getSequenceStateFromSettings = (
+  settings: EngineSettings
+): SequenceState => {
+  const timeSec = getSequenceTimeFromPlayback(settings);
+  return getSequenceState(timeSec);
 };
+
+/** Effective arc progress 0–1 from the LDAC sequence (dot-move stage only). */
+export const getArcProgress = (settings: EngineSettings): number =>
+  getSequenceStateFromSettings(settings).arcProgress;

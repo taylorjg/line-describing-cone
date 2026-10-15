@@ -2,7 +2,13 @@ import * as THREE from "three";
 import type { EngineSettings } from "@app/settings/types";
 import type { WallLayout } from "./scene-layout";
 import { APEX_RADIUS } from "./scene-layout";
-import { getNarrowPointOnRuling, sampleWallArcPoints } from "./arc-geometry";
+import {
+  ARC_START_ANGLE,
+  getNarrowPointOnRuling,
+  getWallArcPoint,
+  sampleWallArcPoints,
+} from "./arc-geometry";
+import { getSequenceStateFromSettings } from "./arc-animation";
 import { ConeMembraneGeometry } from "./cone-membrane";
 
 const ARC_SAMPLES = 96;
@@ -23,6 +29,7 @@ const vertexShader = /* glsl */ `
 
 const fragmentShader = /* glsl */ `
   uniform vec3 projectorPosition;
+  uniform float lightOpacity;
   uniform float scatterG;
   uniform float edgeMix;
   uniform float falloffPower;
@@ -65,7 +72,6 @@ const fragmentShader = /* glsl */ `
     vec3 toFrag = vWorldPos - projectorPosition;
     float dist = length(toFrag);
 
-    // vUv.y runs narrow (projector) → wide (wall); hot at source, fade along the beam.
     float t = clamp(vUv.y, 0.0, 1.0);
     float distAtten = mix(farAtten, nearBoost, pow(1.0 - t, falloffPower));
 
@@ -73,7 +79,6 @@ const fragmentShader = /* glsl */ `
     vec3 beamDir = dist > 1e-5 ? toFrag / dist : vec3(0.0, 0.0, -1.0);
     float cosTheta = dot(beamDir, viewDir);
 
-    // Thin sheet: visible from both sides (DoubleSide); flip normal on back faces for rim.
     vec3 n = gl_FrontFacing ? vNormal : -vNormal;
     float edgeTerm = 1.0 - abs(dot(viewDir, n));
     float phasePeak = henyeyGreenstein(1.0, scatterG);
@@ -81,7 +86,6 @@ const fragmentShader = /* glsl */ `
     float alongBeam = max(cosTheta, 0.0);
     float glareSuppress = 1.0 - glareStrength * alongBeam * alongBeam;
     float highlight = mix(edgeTerm, phase, edgeMix) * glareSuppress;
-    // Keep a faint sheet visible face-on; rim still dominates at grazing angles.
     highlight = max(highlight, edgeTerm * 0.78);
 
     vec2 noiseCoord = vec2(vUv.y * 48.0, vUv.x * 12.0);
@@ -96,7 +100,7 @@ const fragmentShader = /* glsl */ `
       1.0
     );
 
-    float intensity = weight * density * distAtten * membraneMax;
+    float intensity = weight * density * distAtten * membraneMax * lightOpacity;
     vec3 color = vec3(1.0, 1.0, 1.0) * intensity;
     gl_FragColor = vec4(color, intensity);
   }
@@ -108,6 +112,7 @@ export class ConeBeam {
   private readonly material: THREE.ShaderMaterial;
   private readonly uniforms: {
     projectorPosition: { value: THREE.Vector3 };
+    lightOpacity: { value: number };
     scatterG: { value: number };
     edgeMix: { value: number };
     falloffPower: { value: number };
@@ -131,7 +136,7 @@ export class ConeBeam {
     this.geometry = new ConeMembraneGeometry();
     this.uniforms = {
       projectorPosition: { value: new THREE.Vector3() },
-      // Visible by default from face-on; rim/scatter still adds brightness at grazing angles.
+      lightOpacity: { value: 0 },
       scatterG: { value: 0.68 },
       edgeMix: { value: 0.4 },
       falloffPower: { value: 2.35 },
@@ -161,13 +166,48 @@ export class ConeBeam {
     this.mesh.renderOrder = 0;
   }
 
+  private _updatePointBeam(wall: WallLayout, emitPoint: THREE.Object3D): void {
+    this._worldMatrixInverse.copy(emitPoint.matrixWorld).invert();
+    const wide = getWallArcPoint(
+      ARC_START_ANGLE,
+      wall,
+      this._scratchWide
+    ).applyMatrix4(this._worldMatrixInverse);
+    const narrow = getNarrowPointOnRuling(
+      wide,
+      APEX_RADIUS,
+      this._scratchNarrow
+    );
+
+    this._narrowPoints.length = 0;
+    this._widePoints.length = 0;
+    this._narrowPoints.push(narrow.clone(), narrow.clone());
+    this._widePoints.push(wide.clone(), wide.clone());
+    this.geometry.update(this._narrowPoints, this._widePoints);
+  }
+
   update(
     settings: EngineSettings,
     wall: WallLayout,
     emitPoint: THREE.Object3D
   ): void {
+    const sequence = getSequenceStateFromSettings(settings);
+    this.uniforms.lightOpacity.value = sequence.lightOpacity;
+
     emitPoint.updateWorldMatrix(true, false);
     emitPoint.getWorldPosition(this.uniforms.projectorPosition.value);
+
+    if (sequence.lightOpacity <= 0) {
+      this.mesh.visible = false;
+      this.geometry.setDrawRange(0, 0);
+      return;
+    }
+
+    if (sequence.arcProgress <= 0) {
+      this._updatePointBeam(wall, emitPoint);
+      this.mesh.visible = true;
+      return;
+    }
 
     sampleWallArcPoints(settings, wall, ARC_SAMPLES, this._arcPoints);
 

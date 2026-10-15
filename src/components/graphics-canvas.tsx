@@ -2,6 +2,7 @@ import { forwardRef, useImperativeHandle } from "react";
 import { Box } from "@mui/material";
 import { useGraphicsEngine } from "@app/hooks/use-graphics-engine";
 import type { ConeSettings, EngineStatus } from "@app/settings/types";
+import type { SequenceState } from "@app/sequence/sequence-types";
 
 export interface GraphicsCanvasHandle {
   snapshot: () => string | null;
@@ -11,15 +12,17 @@ export interface GraphicsCanvasHandle {
 interface GraphicsCanvasProps {
   settings: ConeSettings;
   onStatus?: (status: EngineStatus) => void;
+  onSequenceState?: (state: SequenceState) => void;
 }
 
 export const GraphicsCanvas = forwardRef<
   GraphicsCanvasHandle,
   GraphicsCanvasProps
->(function GraphicsCanvas({ settings, onStatus }, ref) {
+>(function GraphicsCanvas({ settings, onStatus, onSequenceState }, ref) {
   const { containerRef, snapshot, restart } = useGraphicsEngine({
     settings,
     onStatus,
+    onSequenceState,
   });
 
   useImperativeHandle(ref, () => ({ snapshot, restart }), [snapshot, restart]);

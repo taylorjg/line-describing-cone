@@ -3,6 +3,9 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import type { ConeSettings, EngineStatus } from "@app/settings/types";
 import { DEFAULT_SETTINGS } from "@app/settings/defaults";
 import { toEngineSettings } from "@app/settings/to-engine-settings";
+import { getSequenceStateFromSettings } from "@app/graphics/arc-animation";
+import { SEQUENCE_TOTAL_SEC } from "@app/sequence/ldac-sequence";
+import type { SequenceState } from "@app/sequence/sequence-types";
 import {
   aimProjectorAtWall,
   createSceneLayout,
@@ -16,11 +19,13 @@ import { ConeBeam } from "./cone-beam";
 
 export interface ConeEngineOptions {
   onStatus?: (status: EngineStatus) => void;
+  onSequenceState?: (state: SequenceState) => void;
 }
 
 export class ConeEngine {
   private readonly _container: HTMLElement;
   private readonly _onStatus: (status: EngineStatus) => void;
+  private readonly _onSequenceState: (state: SequenceState) => void;
   private readonly _canvas: HTMLCanvasElement;
   private readonly _renderer: THREE.WebGLRenderer;
   private readonly _scene: THREE.Scene;
@@ -37,11 +42,12 @@ export class ConeEngine {
   private _rafId: number | null = null;
   private _timer = new THREE.Timer();
   private _elapsedSec = 0;
-  private _cycleCompleteSent = false;
+  private _completedLoops = 0;
 
-  constructor(container: HTMLElement, { onStatus }: ConeEngineOptions = {}) {
+  constructor(container: HTMLElement, options: ConeEngineOptions = {}) {
     this._container = container;
-    this._onStatus = onStatus ?? (() => {});
+    this._onStatus = options.onStatus ?? (() => {});
+    this._onSequenceState = options.onSequenceState ?? (() => {});
 
     this._canvas = document.createElement("canvas");
     this._canvas.style.display = "block";
@@ -95,13 +101,15 @@ export class ConeEngine {
     this._settings = toEngineSettings(settings, this._elapsedSec);
 
     if (!wasPlaying && settings.playing) {
-      this._cycleCompleteSent = false;
+      this._completedLoops = Math.floor(
+        (this._elapsedSec * settings.timeScale) / SEQUENCE_TOTAL_SEC
+      );
     }
   }
 
   restart(): void {
     this._elapsedSec = 0;
-    this._cycleCompleteSent = false;
+    this._completedLoops = 0;
   }
 
   snapshot(): string | null {
@@ -160,11 +168,10 @@ export class ConeEngine {
   private _tickTime(delta: number): void {
     if (this._settings.playing) {
       this._elapsedSec += delta;
-      const scaled =
-        (this._elapsedSec * this._settings.timeScale) /
-        this._settings.durationSec;
-      if (scaled >= 1 && !this._cycleCompleteSent) {
-        this._cycleCompleteSent = true;
+      const scaled = this._elapsedSec * this._settings.timeScale;
+      const loops = Math.floor(scaled / SEQUENCE_TOTAL_SEC);
+      if (loops > this._completedLoops) {
+        this._completedLoops = loops;
         this._onStatus({ type: "cycle-complete" });
       }
     }
@@ -212,6 +219,7 @@ export class ConeEngine {
 
     this._wallArc.update(this._settings);
     this._coneBeam.update(this._settings, wall, this._layout.emitPoint);
+    this._onSequenceState(getSequenceStateFromSettings(this._settings));
 
     this._renderer.render(this._scene, this._camera);
   }

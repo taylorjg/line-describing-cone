@@ -40,6 +40,26 @@
       "notes": "Documentation of the solid-light installation"
     }
   ],
+  "sequenceTimings": {
+    "source": "McCall production software screenshot (units inferred as seconds)",
+    "totalSec": 1923,
+    "stages": [
+      { "label": "black", "durationSec": 5 },
+      { "label": "title in", "durationSec": 2 },
+      { "label": "title", "durationSec": 7 },
+      { "label": "title out", "durationSec": 2 },
+      { "label": "black", "durationSec": 9 },
+      { "label": "dot in", "durationSec": 2 },
+      { "label": "dot pause", "durationSec": 4 },
+      { "label": "dot move", "durationSec": 1796 },
+      { "label": "dot pause", "durationSec": 16 },
+      { "label": "dot out", "durationSec": 2 },
+      { "label": "circle pause", "durationSec": 16 },
+      { "label": "circle out", "durationSec": 2 },
+      { "label": "black", "durationSec": 60 }
+    ],
+    "notes": "Arc progress advances only during dot move. In/out stages are linear fades."
+  },
   "textReferences": [
     "https://whitney.org/collection/works/15286",
     "https://whitney.org/exhibitions/dreamlands/art?section=45",

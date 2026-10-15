@@ -29,7 +29,7 @@ npm run deploy
 
 ## Controls
 
-- **Play / Pause / Restart** — 30 min cycle at 60× time scale
+- **Play / Pause / Restart** — full sequence (~32 min real time) at 6× time scale
 - Drag to orbit the camera; scroll to zoom
 
 ## Architecture

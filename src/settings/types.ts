@@ -3,8 +3,6 @@ export type EngineStatus =
 
 export interface ConeSettings {
   playing: boolean;
-  /** Full cycle length in seconds (real artwork: 1800). */
-  durationSec: number;
   /** Playback multiplier for development. */
   timeScale: number;
   /** Manual scrub 0–1 when paused. */
