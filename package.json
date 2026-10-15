@@ -2,7 +2,7 @@
   "name": "line-describing-cone",
   "description": "A browser study of Anthony McCall's Line Describing a Cone",
   "private": true,
-  "version": "0.0.1",
+  "version": "0.0.2",
   "type": "module",
   "scripts": {
     "dev": "vite",
