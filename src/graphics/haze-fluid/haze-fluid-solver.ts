@@ -54,8 +54,8 @@ export class HazeFluidSolver {
         uDensity: { value: null as THREE.Texture | null },
         uTime: { value: 0 },
         uDt: { value: 0.016 },
-        uSwirl: { value: 1.2 },
-        uDissipation: { value: 0.992 },
+        uSwirl: { value: 0.85 },
+        uDissipation: { value: 0.9945 },
         uTexelSize: { value: texel },
       },
       depthTest: false,
@@ -126,7 +126,7 @@ export class HazeFluidSolver {
     this._ensureInit();
     if (!params.playing) return;
 
-    const dt = Math.min(params.delta, 0.05) * 1.2;
+    const dt = Math.min(params.delta, 0.05) * 0.75;
     const read = this._readTarget();
     const write = this._writeTarget();
 
@@ -134,26 +134,34 @@ export class HazeFluidSolver {
     advect.uDensity!.value = read.texture;
     advect.uTime!.value = params.time;
     advect.uDt!.value = dt;
-    advect.uSwirl!.value = 0.8 + params.lightOpacity * 0.6;
+    advect.uSwirl!.value = 0.55 + params.lightOpacity * 0.45;
     this._renderPass(this._advectMaterial, write);
     this._swap();
 
     if (params.lightOpacity > 0.01) {
       const splat = this._splatMaterial.uniforms;
-      splat.uStrength!.value = 0.08 * params.lightOpacity * dt * 60;
-      splat.uRadius!.value = 0.006 + params.arcProgress * 0.004;
-
       const arcSpan = Math.max(params.arcProgress, 0.02);
-      const splatCount = 3;
+      const splatCount = 2 + Math.floor(hash1(params.time * 0.17) * 3);
       for (let i = 0; i < splatCount; i++) {
         const readRt = this._readTarget();
         const writeRt = this._writeTarget();
+        const seed =
+          params.time * 0.23 + i * 17.913 + params.arcProgress * 41.0;
         const u = fract(
           0.5 +
-            (i / splatCount - 0.5) * arcSpan +
-            Math.sin(params.time * 0.7 + i) * 0.02
+            (hash1(seed) - 0.5) * arcSpan * 1.35 +
+            (i / splatCount - 0.5) * arcSpan * 0.6
         );
-        (splat.uPoint!.value as THREE.Vector2).set(u, 0.03 + i * 0.008);
+        const v = 0.015 + hash1(seed + 2.71) * 0.07;
+        splat.uStrength!.value =
+          0.05 *
+          params.lightOpacity *
+          dt *
+          60 *
+          (0.55 + hash1(seed + 5.3) * 0.9);
+        splat.uRadius!.value =
+          0.005 + params.arcProgress * 0.004 + hash1(seed + 9.1) * 0.004;
+        (splat.uPoint!.value as THREE.Vector2).set(u, v);
         splat.uDensity!.value = readRt.texture;
         this._renderPass(this._splatMaterial, writeRt);
         this._swap();
@@ -173,4 +181,9 @@ export class HazeFluidSolver {
 
 function fract(x: number): number {
   return x - Math.floor(x);
+}
+
+/** Deterministic 0–1 jitter (stable per frame, varies over time). */
+function hash1(x: number): number {
+  return fract(Math.sin(x * 127.1) * 43758.5453123);
 }

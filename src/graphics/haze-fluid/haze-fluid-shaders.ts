@@ -22,14 +22,31 @@ export const advectDensityFragment = /* glsl */ `
   uniform vec2 uTexelSize;
   varying vec2 vUv;
 
+  float hash21(vec2 p) {
+    p = fract(p * vec2(123.34, 456.21));
+    p += dot(p, p + 45.32);
+    return fract(p.x * p.y);
+  }
+
   void main() {
     vec2 uv = vUv;
-    float angle = uTime * 0.35 + uv.y * 6.28318 * 2.0;
-    float twist = sin(uv.x * 6.28318 * 3.0 + uTime * 0.5) * 0.4;
-    vec2 velocity = vec2(cos(angle + twist), sin(angle * 0.85 + twist)) * uSwirl;
-    velocity *= mix(0.35, 1.0, uv.y);
+    float slowTime = uTime * 0.2;
+    float n = hash21(uv * 4.2 + slowTime * 0.12);
+    float n2 = hash21(uv * 9.3 - slowTime * 0.07 + 19.0);
 
-    vec2 backtrace = uv - velocity * uDt * uTexelSize * 120.0;
+    float angle =
+      slowTime * 0.14 +
+      uv.y * 6.28318 * 1.5 +
+      (n - 0.5) * 1.1;
+    float twist =
+      sin(uv.x * 6.28318 * 2.2 + slowTime * 0.22) * 0.32 +
+      (n2 - 0.5) * 0.35;
+    vec2 velocity =
+      vec2(cos(angle + twist), sin(angle * 0.82 + twist * 1.05)) * uSwirl;
+    velocity += vec2(n - 0.5, n2 - 0.5) * 0.22 * uSwirl;
+    velocity *= mix(0.3, 1.0, uv.y);
+
+    vec2 backtrace = uv - velocity * uDt * uTexelSize * 48.0;
     backtrace = fract(backtrace);
 
     float d = texture2D(uDensity, backtrace).r;
