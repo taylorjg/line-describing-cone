@@ -16,6 +16,8 @@ import {
 } from "./scene-layout";
 import { WallArc } from "./wall-arc";
 import { ConeBeam } from "./cone-beam";
+import { HazeFill } from "./haze-fill";
+import { HazeFluidSolver } from "./haze-fluid/haze-fluid-solver";
 
 export interface ConeEngineOptions {
   onStatus?: (status: EngineStatus) => void;
@@ -33,7 +35,9 @@ export class ConeEngine {
   private readonly _controls: OrbitControls;
   private readonly _layout = createSceneLayout();
   private readonly _wallArc = new WallArc();
-  private readonly _coneBeam = new ConeBeam();
+  private readonly _hazeFluid: HazeFluidSolver;
+  private readonly _coneBeam: ConeBeam;
+  private readonly _hazeFill: HazeFill;
   private readonly _wallTarget = new THREE.Vector3();
   private readonly _resizeObserver: ResizeObserver;
 
@@ -64,6 +68,10 @@ export class ConeEngine {
     this._renderer.setClearColor(0x000000, 1);
     this._renderer.outputColorSpace = THREE.SRGBColorSpace;
 
+    this._hazeFluid = new HazeFluidSolver(this._renderer);
+    this._coneBeam = new ConeBeam(this._hazeFluid.densityTexture);
+    this._hazeFill = new HazeFill(this._hazeFluid.densityTexture);
+
     this._scene = new THREE.Scene();
     this._scene.background = new THREE.Color(0x000000);
 
@@ -79,6 +87,7 @@ export class ConeEngine {
     this._scene.add(this._layout.projector);
     this._scene.add(this._layout.wall);
     this._scene.add(this._layout.floor);
+    this._layout.emitPoint.add(this._hazeFill.group);
     this._layout.emitPoint.add(this._coneBeam.mesh);
     this._scene.add(this._wallArc.mesh);
 
@@ -129,7 +138,9 @@ export class ConeEngine {
     this._resizeObserver.disconnect();
     this._controls.dispose();
     this._wallArc.dispose();
+    this._hazeFluid.dispose();
     this._coneBeam.dispose();
+    this._hazeFill.dispose();
     this._layout.wall.geometry.dispose();
     (this._layout.wall.material as THREE.Material).dispose();
     this._layout.floor.geometry.dispose();
@@ -160,6 +171,7 @@ export class ConeEngine {
     this._timer.update(timestamp);
     const delta = this._timer.getDelta();
     this._tickTime(delta);
+    this._stepHaze(delta);
     this._renderFrame();
     this._controls.update();
     this._rafId = requestAnimationFrame(this._loop);
@@ -201,6 +213,19 @@ export class ConeEngine {
     this._controls.update();
   }
 
+  private _stepHaze(delta: number): void {
+    const sequence = getSequenceStateFromSettings(this._settings);
+    this._hazeFluid.step({
+      delta,
+      time: this._elapsedSec * this._settings.timeScale,
+      lightOpacity: sequence.lightOpacity,
+      arcProgress: sequence.arcProgress,
+      playing: this._settings.playing,
+    });
+    this._coneBeam.setHazeTexture(this._hazeFluid.densityTexture);
+    this._hazeFill.setHazeTexture(this._hazeFluid.densityTexture);
+  }
+
   private _renderFrame(): void {
     layoutScene(this._layout, this._settings);
     const wall = getWallLayout(this._settings);
@@ -218,6 +243,7 @@ export class ConeEngine {
     this._wallArc.mesh.rotation.copy(this._layout.wall.rotation);
 
     this._wallArc.update(this._settings);
+    this._hazeFill.update(this._settings, wall, this._layout.emitPoint);
     this._coneBeam.update(this._settings, wall, this._layout.emitPoint);
     this._onSequenceState(getSequenceStateFromSettings(this._settings));
 
